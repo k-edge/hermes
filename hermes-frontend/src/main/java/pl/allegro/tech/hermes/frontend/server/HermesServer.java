@@ -8,8 +8,10 @@ import org.xnio.SslClientAuthMode;
 import pl.allegro.tech.hermes.common.config.ConfigFactory;
 import pl.allegro.tech.hermes.common.config.Configs;
 import pl.allegro.tech.hermes.common.metric.HermesMetrics;
+import pl.allegro.tech.hermes.frontend.publishing.handlers.AuthenticatedRequestHandler;
 import pl.allegro.tech.hermes.frontend.publishing.handlers.ThroughputLimiter;
 import pl.allegro.tech.hermes.frontend.publishing.preview.MessagePreviewPersister;
+import pl.allegro.tech.hermes.frontend.server.auth.AuthenticationConfigurationProvider;
 import pl.allegro.tech.hermes.frontend.services.HealthCheckService;
 
 import javax.inject.Inject;
@@ -60,7 +62,7 @@ public class HermesServer {
     private ThroughputLimiter throughputLimiter;
     private final TopicMetadataLoadingJob topicMetadataLoadingJob;
     private final SslContextFactoryProvider sslContextFactoryProvider;
-
+    private final AuthenticationConfigurationProvider authenticationConfigurationProvider;
     @Inject
     public HermesServer(
             ConfigFactory configFactory,
@@ -70,7 +72,8 @@ public class HermesServer {
             MessagePreviewPersister messagePreviewPersister,
             ThroughputLimiter throughputLimiter,
             TopicMetadataLoadingJob topicMetadataLoadingJob,
-            SslContextFactoryProvider sslContextFactoryProvider) {
+            SslContextFactoryProvider sslContextFactoryProvider,
+        AuthenticationConfigurationProvider authenticationConfigurationProvider) {
 
         this.configFactory = configFactory;
         this.hermesMetrics = hermesMetrics;
@@ -79,7 +82,7 @@ public class HermesServer {
         this.messagePreviewPersister = messagePreviewPersister;
         this.topicMetadataLoadingJob = topicMetadataLoadingJob;
         this.sslContextFactoryProvider = sslContextFactoryProvider;
-
+        this.authenticationConfigurationProvider = authenticationConfigurationProvider;
         this.port = configFactory.getIntProperty(FRONTEND_PORT);
         this.sslPort = configFactory.getIntProperty(FRONTEND_SSL_PORT);
         this.host = configFactory.getStringProperty(FRONTEND_HOST);
@@ -150,7 +153,11 @@ public class HermesServer {
                 .get("/status/health", healthCheckHandler)
                 .get("/", healthCheckHandler);
 
-        return isEnabled(FRONTEND_REQUEST_DUMPER) ? new RequestDumpingHandler(routingHandler) : routingHandler;
+        HttpHandler authAwareHandler = new AuthenticatedRequestHandler(routingHandler,
+            authenticationConfigurationProvider.getAuthenticationConfiguration().get());
+
+        return isEnabled(FRONTEND_REQUEST_DUMPER) ? new RequestDumpingHandler(authAwareHandler) :
+            authAwareHandler;
     }
 
     private boolean isEnabled(Configs property) {

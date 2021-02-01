@@ -1,6 +1,8 @@
 package pl.allegro.tech.hermes.frontend;
 
 import com.google.common.collect.Lists;
+import io.undertow.security.impl.BasicAuthenticationMechanism;
+import java.util.Collections;
 import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.hk2.utilities.Binder;
 import org.glassfish.hk2.utilities.ServiceLocatorUtilities;
@@ -30,6 +32,7 @@ import pl.allegro.tech.hermes.frontend.server.TopicMetadataLoadingStartupHook;
 import pl.allegro.tech.hermes.frontend.server.TopicSchemaLoadingStartupHook;
 import pl.allegro.tech.hermes.frontend.server.WaitForKafkaStartupHook;
 import pl.allegro.tech.hermes.frontend.server.auth.AuthenticationConfiguration;
+import pl.allegro.tech.hermes.frontend.server.auth.ZookeeperIdentityManager;
 import pl.allegro.tech.hermes.frontend.services.HealthCheckService;
 import pl.allegro.tech.hermes.infrastructure.zookeeper.cache.ModelAwareZookeeperNotifyingCache;
 import pl.allegro.tech.hermes.tracker.frontend.LogRepository;
@@ -57,7 +60,15 @@ public final class HermesFrontend {
     private final Trackers trackers;
 
     public static void main(String[] args) throws Exception {
-        frontend().build().start();
+        frontend()
+            .withAuthenticationConfiguration(
+                new AuthenticationConfiguration(
+                    exchange -> true,
+                    Collections.singletonList(new BasicAuthenticationMechanism("fp-hermes")),
+                    new ZookeeperIdentityManager()
+                )
+            )
+            .build().start();
     }
 
     private HermesFrontend(HooksHandler hooksHandler,

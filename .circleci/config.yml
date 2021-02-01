@@ -1,0 +1,144 @@
+version: 2.1
+
+orbs:
+  aws-cli: circleci/aws-cli@0.1.13
+  aws-ecr: circleci/aws-ecr@6.5.0
+  aws-ecs: circleci/aws-ecs@1.2.0
+  jq: circleci/jq@2.1.0
+
+commands:
+  load-env-from-parameter-store:
+    parameters:
+      container-prefix:
+        type: string
+      tag:
+        type: string
+    steps:
+      - aws-cli/install
+      - aws-cli/configure
+      - jq/install
+      - run:
+          name: Load Environment variables from AWS Parameter Store
+          command: |
+            CONTAINER_PREFIX='container=<< parameters.container-prefix >>'
+            ENV_STRING=''
+            for row in $(aws ssm describe-parameters --parameter-filters "Key=tag:<< parameters.tag >>"  | jq -c '.Parameters[].Name' ); do
+              _jq() {
+                PARNAME_WITH_SPACES=$(echo $row | tr '\"' ' ')
+                PARNAME=${PARNAME_WITH_SPACES%?}
+                PARDATA=$(aws ssm get-parameters --with-decryption --names $PARNAME | jq '.Parameters[].Value')
+                ENV_STRING="$ENV_STRING,$CONTAINER_PREFIX,name=${PARNAME:1},value=$PARDATA"
+                echo "export $PARNAME=$PARDATA" >> $BASH_ENV
+              }
+              _jq
+            done
+            echo "export ENV_VARS=${ENV_STRING:1}" >> $BASH_ENV
+            source $BASH_ENV
+
+jobs:
+  build:
+    docker:
+      - image: cimg/openjdk:11.0
+        environment:
+          JVM_OPTS: -Xmx3200m
+    working_directory: ~/factorypal
+    steps:
+      - checkout
+      - setup_remote_docker:
+          docker_layer_caching: true
+      - attach_workspace:
+          at: .
+      - restore_cache:
+          keys:
+            - v1-dependencies-{{ "build.gradle" }}
+            - v1-dependencies-
+      - run: ./gradlew distZip -Pdistribution
+      - save_cache:
+          paths:
+            - ~/.gradle
+          key: v1-dependencies-{{ checksum "build.gradle" }}
+      - persist_to_workspace:
+          root: .
+          paths:
+            - .
+
+  build-ecr-image-and-deploy:
+    parameters:
+      working-dir:
+        type: string
+      param-store-prefix:
+        type: string
+      container:
+        type: string
+      repository:
+        type: string
+      ecs-family:
+        type: string
+      service-name:
+        type: string
+    working_directory: << parameters.working-dir >>
+    executor: aws-ecr/default
+    steps:
+      - attach_workspace:
+          at: ~/factorypal
+      - run:
+          name: "Build master artifact."
+          command: |
+            set -o nounset
+            set -o errexit
+            LATEST_TAG=$(git rev-parse --verify --short HEAD)
+            echo "build latest tag: $LATEST_TAG"
+            echo "export FP_TAG_VERSION=$LATEST_TAG" >> $BASH_ENV
+            source $BASH_ENV
+      - load-env-from-parameter-store:
+          container-prefix: '<< parameters.container >>'
+          tag: '<< parameters.param-store-prefix >>'
+      - aws-ecr/build-and-push-image:
+          checkout: false
+          repo: "<< parameters.repository >>"
+          tag: "latest,$STAGE,$STAGE-${FP_TAG_VERSION}"
+      - aws-ecs/update-service:
+          family: '<< parameters.ecs-family >>'
+          cluster-name: 'smop-core-cluster'
+          service-name: '<< parameters.service-name >>'
+          container-env-var-updates: '${ENV_VARS}'
+          force-new-deployment: true
+
+workflows:
+  build-distributions:
+    jobs:
+      - build:
+          name: "Build Distributions"
+      - build-ecr-image-and-deploy:
+          name: "Staging: Build and Deploy Hermes Frontend"
+          context: SO_STAGING
+          requires:
+            - "Build Distributions"
+          working-dir: ~/factorypal/hermes-frontend
+          param-store-prefix: hermes
+          container: hermes-frontend
+          repository: factorypal/hermes-frontend
+          ecs-family: hermes-frontend
+          service-name: hermes-frontend
+      - build-ecr-image-and-deploy:
+          name: "Staging: Build and Deploy Hermes Consumers"
+          context: SO_STAGING
+          requires:
+            - "Build Distributions"
+          working-dir: ~/factorypal/hermes-consumers
+          param-store-prefix: hermes
+          container: hermes-consumers
+          repository: factorypal/hermes-consumers
+          ecs-family: hermes-consumers
+          service-name: hermes-consumers
+      - build-ecr-image-and-deploy:
+          name: "Staging: Build and Deploy Hermes Management"
+          context: SO_STAGING
+          requires:
+            - "Build Distributions"
+          working-dir: ~/factorypal/hermes-management
+          param-store-prefix: hermes
+          container: hermes-management
+          repository: factorypal/hermes-management
+          ecs-family: hermes-management
+          service-name: hermes-management
