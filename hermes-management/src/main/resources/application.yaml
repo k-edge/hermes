@@ -7,7 +7,7 @@ storage:
     -
       datacenter: dc
       clusterName: zk
-      connectionString: localhost:2181
+      connectionString: ${MSK_ZK_CONNECT_STRING}
 
 kafka:
   clusters:
@@ -15,7 +15,7 @@ kafka:
       datacenter: dc
       clusterName: primary
       connectionTimeout: 3000
-      bootstrapKafkaServer: localhost:9092
+      bootstrapKafkaServer: ${MSK_KAFKA_BROKER_LIST}
 
 spring:
   jersey:
