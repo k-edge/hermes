@@ -108,12 +108,12 @@ workflows:
   build-distributions:
     jobs:
       - build:
-          name: "Build Distributions"
+          name: "Build Distribution"
       - build-ecr-image-and-deploy:
           name: "Staging: Build and Deploy Hermes Frontend"
           context: SO_STAGING
           requires:
-            - "Build Distributions"
+            - "Build Distribution"
           working-dir: ~/factorypal/hermes-frontend
           param-store-prefix: hermes
           container: hermes-frontend
@@ -124,7 +124,7 @@ workflows:
           name: "Staging: Build and Deploy Hermes Consumers"
           context: SO_STAGING
           requires:
-            - "Build Distributions"
+            - "Build Distribution"
           working-dir: ~/factorypal/hermes-consumers
           param-store-prefix: hermes
           container: hermes-consumers
@@ -135,7 +135,7 @@ workflows:
           name: "Staging: Build and Deploy Hermes Management"
           context: SO_STAGING
           requires:
-            - "Build Distributions"
+            - "Build Distribution"
           working-dir: ~/factorypal/hermes-management
           param-store-prefix: hermes
           container: hermes-management
