@@ -27,8 +27,8 @@ commands:
                 PARNAME_WITH_SPACES=$(echo $row | tr '\"' ' ')
                 PARNAME=${PARNAME_WITH_SPACES%?}
                 PARDATA=$(aws ssm get-parameters --with-decryption --names $PARNAME | jq '.Parameters[].Value')
-                ENV_STRING="$ENV_STRING,$CONTAINER_PREFIX,name=${PARNAME:1},value=$PARDATA"
-                echo "export $PARNAME=$PARDATA" >> $BASH_ENV
+                ENV_STRING="$ENV_STRING,$CONTAINER_PREFIX,name=${PARNAME:1},value='$PARDATA'"
+                echo "export $PARNAME='$PARDATA'" >> $BASH_ENV
               }
               _jq
             done
