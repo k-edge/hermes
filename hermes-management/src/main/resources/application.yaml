@@ -41,6 +41,7 @@ management:
 audit.enabled: false
 
 topic:
+  allowRemoval: true
   allowedTopicLabels: &ALLOWED_LABELS
     - internal
     - deprecated
