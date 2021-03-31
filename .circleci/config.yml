@@ -196,7 +196,7 @@ workflows:
                 - master
 
       - build-ecr-image-and-deploy:
-          name: "Staging: Build and Deploy Hermes Frontend"
+          name: "Production: Build and Deploy Hermes Frontend"
           context: SO_PRODUCTION
           requires:
             - "approve Prod"
