@@ -142,3 +142,89 @@ workflows:
           repository: factorypal/hermes-management
           ecs-family: hermes-management
           service-name: hermes-management
+
+
+      - approve-deploy-preprod:
+          name: "approve PreProd"
+          type: approval
+          filters:
+            branches:
+              only:
+                - master
+
+      - build-ecr-image-and-deploy:
+          name: "PreProd: Build and Deploy Hermes Frontend"
+          context: SO_PREPROD
+          requires:
+            - "approve PreProd"
+          working-dir: ~/factorypal/hermes-frontend
+          param-store-prefix: hermes
+          container: hermes-frontend
+          repository: factorypal/hermes-frontend
+          ecs-family: hermes-frontend
+          service-name: hermes-frontend
+      - build-ecr-image-and-deploy:
+          name: "PreProd: Build and Deploy Hermes Consumers"
+          context: SO_PREPROD
+          requires:
+            - "approve PreProd"
+          working-dir: ~/factorypal/hermes-consumers
+          param-store-prefix: hermes
+          container: hermes-consumers
+          repository: factorypal/hermes-consumers
+          ecs-family: hermes-consumers
+          service-name: hermes-consumers
+      - build-ecr-image-and-deploy:
+          name: "PreProd: Build and Deploy Hermes Management"
+          context: SO_PREPROD
+          requires:
+            - "approve PreProd"
+          working-dir: ~/factorypal/hermes-management
+          param-store-prefix: hermes
+          container: hermes-management
+          repository: factorypal/hermes-management
+          ecs-family: hermes-management
+          service-name: hermes-management
+
+
+      - approve-deploy-prod:
+          name: "approve Prod"
+          type: approval
+          filters:
+            branches:
+              only:
+                - master
+
+      - build-ecr-image-and-deploy:
+          name: "Staging: Build and Deploy Hermes Frontend"
+          context: SO_PRODUCTION
+          requires:
+            - "approve Prod"
+          working-dir: ~/factorypal/hermes-frontend
+          param-store-prefix: hermes
+          container: hermes-frontend
+          repository: factorypal/hermes-frontend
+          ecs-family: hermes-frontend
+          service-name: hermes-frontend
+      - build-ecr-image-and-deploy:
+          name: "Production: Build and Deploy Hermes Consumers"
+          context: SO_PRODUCTION
+          requires:
+            - "approve Prod"
+          working-dir: ~/factorypal/hermes-consumers
+          param-store-prefix: hermes
+          container: hermes-consumers
+          repository: factorypal/hermes-consumers
+          ecs-family: hermes-consumers
+          service-name: hermes-consumers
+      - build-ecr-image-and-deploy:
+          name: "Production: Build and Deploy Hermes Management"
+          context: SO_PRODUCTION
+          requires:
+            - "approve Prod"
+          working-dir: ~/factorypal/hermes-management
+          param-store-prefix: hermes
+          container: hermes-management
+          repository: factorypal/hermes-management
+          ecs-family: hermes-management
+          service-name: hermes-management
