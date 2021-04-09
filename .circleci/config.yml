@@ -147,6 +147,10 @@ workflows:
       - approve-deploy-preprod:
           name: "approve PreProd"
           type: approval
+          requires:
+            - "Staging: Build and Deploy Hermes Frontend"
+            - "Staging: Build and Deploy Hermes Consumers"
+            - "Staging: Build and Deploy Hermes Management"
           filters:
             branches:
               only:
@@ -157,7 +161,6 @@ workflows:
           context: SO_PREPROD
           requires:
             - "approve PreProd"
-            - "Build Distribution"
           working-dir: ~/factorypal/hermes-frontend
           param-store-prefix: hermes
           container: hermes-frontend
@@ -169,7 +172,6 @@ workflows:
           context: SO_PREPROD
           requires:
             - "approve PreProd"
-            - "Build Distribution"
           working-dir: ~/factorypal/hermes-consumers
           param-store-prefix: hermes
           container: hermes-consumers
@@ -181,7 +183,6 @@ workflows:
           context: SO_PREPROD
           requires:
             - "approve PreProd"
-            - "Build Distribution"
           working-dir: ~/factorypal/hermes-management
           param-store-prefix: hermes
           container: hermes-management
@@ -193,6 +194,10 @@ workflows:
       - approve-deploy-prod:
           name: "approve Prod"
           type: approval
+          requires:
+            - "Staging: Build and Deploy Hermes Frontend"
+            - "Staging: Build and Deploy Hermes Consumers"
+            - "Staging: Build and Deploy Hermes Management"
           filters:
             branches:
               only:
@@ -203,7 +208,6 @@ workflows:
           context: SO_PRODUCTION
           requires:
             - "approve Prod"
-            - "Build Distribution"
           working-dir: ~/factorypal/hermes-frontend
           param-store-prefix: hermes
           container: hermes-frontend
@@ -215,7 +219,6 @@ workflows:
           context: SO_PRODUCTION
           requires:
             - "approve Prod"
-            - "Build Distribution"
           working-dir: ~/factorypal/hermes-consumers
           param-store-prefix: hermes
           container: hermes-consumers
@@ -227,7 +230,6 @@ workflows:
           context: SO_PRODUCTION
           requires:
             - "approve Prod"
-            - "Build Distribution"
           working-dir: ~/factorypal/hermes-management
           param-store-prefix: hermes
           container: hermes-management
