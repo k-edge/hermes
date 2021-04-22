@@ -25,6 +25,9 @@ import org.slf4j.LoggerFactory;
     Map<String, String> clients = new HashMap<>();
     clients.putIfAbsent("api.factorypal.com","z_A7CwTQtVTcFGJQBrdfNGBY");
     clients.putIfAbsent("domain.service.actualcenterlines","zmpULbwndoQvDofWNnqU8cDD");
+    clients.putIfAbsent("domain.service.workorder","d1Kox4VyRR8xPOy7Yry2fZQq");
+    clients.putIfAbsent("domain.service.product","g0GO8D7wQpgWCjDfVTXBRAvp");
+    clients.putIfAbsent("domain.service.task","Qgf70GS8rFNDO0VBIDlGLQlA");
     return clients;
   }
 
