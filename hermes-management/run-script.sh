@@ -8,5 +8,5 @@ export HERMES_MANAGEMENT_OPTS="-Dzookeeper.connect.string=${MSK_ZK_CONNECT_STRIN
   -Dschema.repository.subjectSuffixEnabled=true \
   -Dtopic.allowRemoval=true"
 
-export JAVA_OPTS="-Djava.security.egd=file:/dev/./urandom -XX:+UseG1GC -Xms1g -Xmx1G"
+export JAVA_OPTS="-Djava.security.egd=file:/dev/./urandom -XX:+UseG1GC -Xms3G -Xmx3G"
 /app/binary/bin/hermes-management
