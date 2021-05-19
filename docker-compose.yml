@@ -94,3 +94,9 @@ services:
       MSK_ZK_CONNECT_STRING: "zookeeper:2181"
       KAFKA_SCHEMA_REGISTRY_URL: "http://schema-registry:8081"
       MSK_KAFKA_BROKER_LIST: "broker:29092"
+
+  http-echo:
+    image: mendhak/http-https-echo:18
+    container_name: http-echo
+    ports:
+      - "8000:8080"
