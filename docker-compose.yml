@@ -80,7 +80,6 @@ services:
       MSK_ZK_CONNECT_STRING: "zookeeper:2181"
       MSK_KAFKA_BROKER_LIST: "broker:29092"
       KAFKA_SCHEMA_REGISTRY_URL: "http://schema-registry:8081"
-      HERMES_CONSUMER_HTTP_PORT: 8080
 
   hermes-management:
     build: ./hermes-management
